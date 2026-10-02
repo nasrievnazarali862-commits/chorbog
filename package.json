@@ -1,0 +1,15 @@
+{
+  "name": "alamli-status-private",
+  "version": "1.1.0",
+  "description": "Alamli Status - maxfiy kod bilan kiriladigan status sayti",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "better-sqlite3": "^13.0.3",
+    "express": "^4.21.2",
+    "express-session": "^1.18.1",
+    "multer": "^1.4.5-lts.1"
+  }
+}
