@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Alamli Status</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif}
+body{background:#f3f3f3;color:#222}
+header{background:linear-gradient(135deg,#111,#3b3b3b);color:#fff;padding:24px 15px;text-align:center;position:relative}
+header h1{font-size:32px;margin-bottom:7px} header p{color:#ccc}
+.logout{position:absolute;right:15px;top:15px;width:auto;margin:0;padding:8px 12px;background:#555;font-size:13px}
+.container{max-width:700px;margin:25px auto;padding:0 15px}
+.form-box,.status{background:#fff;border-radius:15px;box-shadow:0 4px 15px #00000012}
+.form-box{padding:20px;margin-bottom:25px}
+h2{margin-bottom:14px} textarea{width:100%;min-height:110px;resize:vertical;border:1px solid #ddd;border-radius:10px;padding:12px;font-size:16px;outline:none}
+.file-label{display:block;margin-top:12px;padding:13px;border:2px dashed #bbb;border-radius:10px;text-align:center;cursor:pointer;color:#555}
+#imageInput{display:none}#preview{width:100%;max-height:350px;object-fit:cover;margin-top:12px;border-radius:10px;display:none}
+button{width:100%;margin-top:15px;padding:13px;border:0;border-radius:10px;background:#111;color:#fff;font-size:17px;cursor:pointer}
+button:hover{background:#333}.status{margin-bottom:20px;overflow:hidden}.status img{width:100%;max-height:500px;object-fit:cover;display:block}
+.status-content{padding:17px}.status-text{font-size:18px;line-height:1.5;white-space:pre-wrap}.date{margin-top:10px;color:#888;font-size:13px}
+.delete{width:auto;margin-top:12px;padding:8px 12px;background:#eee;color:#333;font-size:13px}.empty{text-align:center;color:#888;padding:30px}
+#message{margin-top:10px;font-size:14px}
+</style>
+</head>
+<body>
+<header>
+<button class="logout" id="logout">Chiqish</button>
+<h1>🖤 Alamli Status</h1><p>Maxfiy statuslar olami</p>
+</header>
+<main class="container">
+<section class="form-box">
+<h2>✍️ Status joylash</h2>
+<textarea id="statusText" placeholder="Status yozing..."></textarea>
+<label class="file-label" for="imageInput">📷 Rasm tanlash</label>
+<input type="file" id="imageInput" accept="image/*">
+<img id="preview" alt="Preview">
+<button id="postBtn">➕ Statusni joylash</button>
+<div id="message"></div>
+</section>
+<section id="statuses"><div class="empty">Yuklanmoqda...</div></section>
+</main>
+<script>
+const input=document.getElementById("imageInput"),preview=document.getElementById("preview"),msg=document.getElementById("message");
+input.addEventListener("change",()=>{const f=input.files[0];if(!f){preview.style.display="none";return}preview.src=URL.createObjectURL(f);preview.style.display="block"});
+function escapeHTML(t){const d=document.createElement("div");d.textContent=t||"";return d.innerHTML}
+function date(v){return new Date(v.replace(" ","T")+"Z").toLocaleString("uz-UZ",{dateStyle:"medium",timeStyle:"short"})}
+function render(items){
+ const box=document.getElementById("statuses");
+ if(!items.length){box.innerHTML='<div class="empty">Hozircha statuslar yo‘q...</div>';return}
+ box.innerHTML=items.map(s=>`<article class="status">${s.image?`<img src="${s.image}" alt="Status rasmi">`:""}<div class="status-content">${s.text?`<div class="status-text">${escapeHTML(s.text)}</div>`:""}<div class="date">🕒 ${date(s.created_at)}</div><button class="delete" onclick="deleteStatus(${s.id})">🗑 O‘chirish</button></div></article>`).join("");
+}
+async function load(){const r=await fetch("/api/statuses");if(r.status===401){location.href="/";return}render(await r.json())}
+document.getElementById("postBtn").addEventListener("click",async()=>{
+ const text=document.getElementById("statusText").value.trim(),file=input.files[0];
+ if(!text&&!file){msg.textContent="Status yoki rasm qo‘shing!";return}
+ const f=new FormData();f.append("text",text);if(file)f.append("image",file);
+ const btn=document.getElementById("postBtn");btn.disabled=true;msg.textContent="Joylanmoqda...";
+ try{const r=await fetch("/api/statuses",{method:"POST",body:f}),d=await r.json();if(!r.ok)throw Error(d.error);document.getElementById("statusText").value="";input.value="";preview.style.display="none";msg.textContent="✅ Joylandi!";load()}catch(e){msg.textContent="❌ "+e.message}finally{btn.disabled=false}
+});
+async function deleteStatus(id){if(!confirm("Statusni o‘chirasizmi?"))return;await fetch("/api/statuses/"+id,{method:"DELETE"});load()}
+document.getElementById("logout").onclick=async()=>{await fetch("/api/logout",{method:"POST"});location.href="/"};
+load();
+</script>
+</body>
+</html>

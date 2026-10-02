@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Alamli Status — Kirish</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif}
+body{min-height:100vh;background:linear-gradient(135deg,#111,#3d3d3d);display:flex;align-items:center;justify-content:center;padding:20px}
+.box{width:100%;max-width:400px;background:#fff;border-radius:20px;padding:30px;box-shadow:0 15px 45px #0006;text-align:center}
+.icon{font-size:48px;margin-bottom:10px}
+h1{margin-bottom:8px}.sub{color:#777;margin-bottom:25px}
+input{width:100%;padding:14px;border:1px solid #ddd;border-radius:10px;font-size:18px;text-align:center;outline:none}
+input:focus{border-color:#555}
+button{width:100%;padding:14px;margin-top:15px;border:0;border-radius:10px;background:#111;color:#fff;font-size:17px;cursor:pointer}
+button:hover{background:#333}
+#error{color:#c00;margin-top:12px;min-height:20px;font-size:14px}
+</style>
+</head>
+<body>
+<div class="box">
+  <div class="icon">🔐</div>
+  <h1>Alamli Status</h1>
+  <p class="sub">Maxfiy sayt</p>
+  <form id="loginForm">
+    <input id="code" type="password" inputmode="numeric" placeholder="Maxfiy kod" autocomplete="current-password" required>
+    <button type="submit">Kirish</button>
+  </form>
+  <div id="error"></div>
+</div>
+<script>
+document.getElementById("loginForm").addEventListener("submit", async e=>{
+  e.preventDefault();
+  const error=document.getElementById("error");
+  error.textContent="";
+  try{
+    const r=await fetch("/api/login",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({code:document.getElementById("code").value})
+    });
+    const data=await r.json();
+    if(!r.ok) throw new Error(data.error||"Kod noto‘g‘ri");
+    location.href="/";
+  }catch(err){error.textContent="❌ "+err.message}
+});
+</script>
+</body>
+</html>
